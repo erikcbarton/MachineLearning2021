@@ -6,6 +6,7 @@
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
 
 ###############################################################################################################
 # Decision Tree Class
@@ -414,11 +415,50 @@ def loadTrainData(fileNames, fileData):
 '''
 Loads test data from the specified file - expects ',' delim.
 '''
-def loadTestData(fileData):
+def loadDataSy(fileData):
     tempSandY = np.genfromtxt(fileData, dtype=str, delimiter=',')
     S = tempSandY[:,0:-1]
     y = tempSandY[:,-1]
     return S, y
+
+'''
+Trains DTrees with all three heuristics and from min depth to max depth specified (inclusive).
+Prints the test errors on the specified test set.
+'''
+def testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, minDepth, maxDepth):
+    # Try multi level with multiple functions
+    print("Depth|    Ent     |     ME     |     GI   ")
+    for d in range(minDepth, maxDepth+1):
+        # Do for each depth
+        dTreeEnt = DTree()
+        dTreeME = DTree()
+        dTreeGI = DTree()
+        tempAttrib = copy.deepcopy(attributesAvaliable)
+        dTreeEnt.buldTree(S, y, attributes, attributeValues, entropy, numYTypes, tempAttrib, d)
+        tempAttrib = copy.deepcopy(attributesAvaliable)
+        dTreeME.buldTree(S, y, attributes, attributeValues, ME, numYTypes, tempAttrib, d)
+        tempAttrib = copy.deepcopy(attributesAvaliable)
+        dTreeGI.buldTree(S, y, attributes, attributeValues, GI, numYTypes, tempAttrib, d)
+
+        errorsEnt = 0
+        errorsME = 0
+        errorsGI = 0
+        total = 0.0 + ytest.shape[0]
+
+        for i in range(Stest.shape[0]):
+            lblEnt = dTreeEnt.label(Stest[i])
+            lblME = dTreeME.label(Stest[i])
+            lblGI = dTreeGI.label(Stest[i])
+            if lblEnt != ytest[i]:
+                errorsEnt += 1
+            if lblME != ytest[i]:
+                errorsME += 1
+            if lblGI != ytest[i]:
+                errorsGI += 1
+
+        print("  %d  |  %f  |  %f  |  %f  " % (d, errorsEnt / total, errorsME / total, errorsGI / total))
+        
+
 
 
 ###############################################################################################################
@@ -429,19 +469,19 @@ def loadTestData(fileData):
 Main method to run the ID3 program hard coded
 '''
 def main():    
-    #Part 2
+    # 1 a, b
+    print("Part 1")
     S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
-    dTreeEnt = DTree()
-    dTreeEnt.buldTree(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, 6)
-    Stest, ytest = loadTestData("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
-    errors = 0
-    for i in range(Stest.shape[0]):
-        lbl = dTreeEnt.label(Stest[i])
-        if lbl != ytest[i]:
-            errors += 1
+    Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
+    
+    print("Train Set")
+    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
+    print("Test Set")
+    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
 
-    print("Had errors: %d" % (errors))
-    print("Had %f test errror" % (errors / ytest.shape[0]))
+    # 2 a
+    print("Part 2")
+
 
 
 if __name__ == '__main__':
