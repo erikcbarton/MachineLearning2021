@@ -7,99 +7,272 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-'''
-Finds the best attribute using the avaliable attributes with the maximum information gain.
-'''
-def findBestAttrib(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable):
-    #print("Calculating information gain of set:")
-    #print(S)
-    #print(y)
+###############################################################################################################
+# Decision Tree Class
+###############################################################################################################
+class DTree(object):
+    '''
+    ID3 Based DTree
+    '''
 
-    bestAttribute = None
-    bestGain = -1
+    '''
+    Initalize objects
+    '''
+    def __init__(self):
+        self.RootNode = None
 
-    numS = y.shape[0]
-    numS += 0.0
-    #print("Number of elements (|S|): %d" % (numS))
-    entropyThisLevel = findEntCurr(y, func, numYTypes)
+    '''
+    Builds the tree using the specified input values
+    '''
+    def buldTree(self, S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, depthLimit):
+        self.RootNode = self.ID3(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, depthLimit)
 
-    for i in attributesAvaliable:
-        #print("")
-        #print("Gain for Attribute: " + str(attributes[i]))
+    '''
+    '''
+    def label(self, attribs):
+        return self.RootNode.getLabel(attribs)
 
-        entSplit = findEntSubset(i, attributes, attributeValues, S, y, func, numS, numYTypes)
+    '''
+    ID3 algo
+    '''
+    def ID3(self, S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, depthRemaining):
+        node = Node()
+        # TODO: Check empty y?
+        if self.allSameLbl(y):
+            #print("All same y")
+            lbl = y[0]
+            node.setupNode(lbl, None, None, None)
+            return node
 
-        gain = entropyThisLevel - entSplit
-        #print("GAIN: %f" % (gain))
+        if len(attributes) == 0:
+            #print("No More Attributes")
+            lbl = self.mostCommonLbl(y)
+            node.setupNode(lbl, None, None, None)
+            return node
+
+        if depthRemaining <= 0:
+            #print("Depth limit reached")
+            lbl = self.mostCommonLbl(y)
+            node.setupNode(lbl, None, None, None)
+            return node
+
+        attributeToSplit = self.findBestAttrib(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable)
+        attributesAvaliable.remove(attributeToSplit) # remove for recursion add back before completion
+        attribValueToSets, attribValueToY = self.splitOnAttrib(attributeToSplit, S, y, attributeValues)
+
+        attribValueToNodes = {}
+
+        for key in attribValueToSets:
+            if attribValueToY[key].size == 0:
+                #print("Empty set")
+                lbl = self.mostCommonLbl(y)
+                tempNode = Node()
+                tempNode.setupNode(lbl, None, None, None)
+                attribValueToNodes[key] = tempNode
+            else:
+                attribValueToNodes[key] = self.ID3(attribValueToSets[key], attribValueToY[key], attributes, attributeValues, func, numYTypes, attributesAvaliable, (depthRemaining - 1))
+
+        node.setupNode(None, attributeToSplit, attributeValues[attributeToSplit], attribValueToNodes)
+        attributesAvaliable.add(attributeToSplit) # added back 
+        return node
+
+    '''
+    Finds the best attribute using the avaliable attributes with the maximum information gain.
+    '''
+    def findBestAttrib(self, S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable):
+        #print("Calculating information gain of set:")
+        #print(S)
+        #print(y)
+
+        bestAttribute = None
+        bestGain = -1
+
+        numS = y.shape[0]
+        numS += 0.0
+        #print("Number of elements (|S|): %d" % (numS))
+        entropyThisLevel = self.findEntCurr(y, func, numYTypes)
+
+        for i in attributesAvaliable:
+            #print("")
+            #print("Gain for Attribute: " + str(attributes[i]))
+
+            entSplit = self.findEntSubset(i, attributes, attributeValues, S, y, func, numS, numYTypes)
+
+            gain = entropyThisLevel - entSplit
+            #print("GAIN: %f" % (gain))
         
-        if gain > bestGain:
-            bestGain = gain
-            bestAttribute = i
+            if gain > bestGain:
+                bestGain = gain
+                bestAttribute = i
 
-    #print("")
-    #print("Best gain %f for attribute: " % (bestGain) + str(attributes[bestAttribute]) )
+        #print("")
+        #print("Best gain %f for attribute: " % (bestGain) + str(attributes[bestAttribute]) )
 
-    return bestAttribute
+        return bestAttribute
 
-'''
-Finds the entropy of subsets of the given S.
-'''
-def findEntSubset(attributeNumber, attributes, attributeValues, S, y, func, Scount, numYTypes):
-    valuesForThisAttrib = attributeValues[attributeNumber] 
+    '''
+    Finds the entropy of subsets of the given S.
+    '''
+    def findEntSubset(self, attributeNumber, attributes, attributeValues, S, y, func, Scount, numYTypes):
+        valuesForThisAttrib = attributeValues[attributeNumber] 
 
-    summedEnt = 0.0
+        summedEnt = 0.0
 
-    for attribValue in valuesForThisAttrib: # all attrib valus like: hot warm cold
-        splitCount = 0.0
-        dictYValuesToCounts = {}
-        entAttrib = 0.0
-
-        #print("Attribute Value: " + str(attribValue))
-
-        for j in range(S.shape[0]):
-            if attribValue == S[j, attributeNumber]:
-                # add y val to dict
-                yVal = y[j]
-                if yVal in dictYValuesToCounts:
-                    dictYValuesToCounts[yVal] = dictYValuesToCounts[yVal] + 1
-                else:
-                    dictYValuesToCounts[yVal] = 1
-                # add 1 to the total counter
-                splitCount += 1.0
-            
-        # call the purity function
-        if splitCount > 1e-8:
-            entAttrib = func(dictYValuesToCounts, splitCount, numYTypes)
-        else:
+        for attribValue in valuesForThisAttrib: # all attrib valus like: hot warm cold
+            splitCount = 0.0
+            dictYValuesToCounts = {}
             entAttrib = 0.0
 
-        #print("H value is: " + str(entAttrib))
+            #print("Attribute Value: " + str(attribValue))
 
-        # use ent value to sum to final value
-        summedEnt += (splitCount / (0.0 + Scount)) * entAttrib
-        # reset count to 0.0
-        splitCount = 0.0
-        # reset dict
-        dictYValuesToCounts.clear()
+            for j in range(S.shape[0]):
+                if attribValue == S[j, attributeNumber]:
+                    # add y val to dict
+                    yVal = y[j]
+                    if yVal in dictYValuesToCounts:
+                        dictYValuesToCounts[yVal] = dictYValuesToCounts[yVal] + 1
+                    else:
+                        dictYValuesToCounts[yVal] = 1
+                    # add 1 to the total counter
+                    splitCount += 1.0
+            
+            # call the purity function
+            if splitCount > 1e-8:
+                entAttrib = func(dictYValuesToCounts, splitCount, numYTypes)
+            else:
+                entAttrib = 0.0
 
-    #print("Final expected purity: %f" % (summedEnt))
-    return summedEnt
+            #print("H value is: " + str(entAttrib))
 
-'''
-Finds the entropy of the current set (no subsets).
-'''
-def findEntCurr(y, func, numYTypes):
-    #print("Purity of the current level")
-    total = y.shape[0]
-    dictYValuesToCounts = {}
+            # use ent value to sum to final value
+            summedEnt += (splitCount / (0.0 + Scount)) * entAttrib
+            # reset count to 0.0
+            splitCount = 0.0
+            # reset dict
+            dictYValuesToCounts.clear()
 
-    for yVal in y:
-        if yVal in dictYValuesToCounts:
-            dictYValuesToCounts[yVal] = dictYValuesToCounts[yVal] + 1
+        #print("Final expected purity: %f" % (summedEnt))
+        return summedEnt
+
+    '''
+    Finds the entropy of the current set (no subsets).
+    '''
+    def findEntCurr(self, y, func, numYTypes):
+        #print("Purity of the current level")
+        total = y.shape[0]
+        dictYValuesToCounts = {}
+
+        for yVal in y:
+            if yVal in dictYValuesToCounts:
+                dictYValuesToCounts[yVal] = dictYValuesToCounts[yVal] + 1
+            else:
+                dictYValuesToCounts[yVal] = 1
+
+        return func(dictYValuesToCounts, total, numYTypes)
+
+    '''
+    Split the sets S and lbls based on the given attribute. Dictionaries are returned
+    mapping the attribute's values to the corresponding subsets for S and lbls.
+    '''
+    def splitOnAttrib(self, attrib, S, y, attributeValues):
+        #print("")
+        #print("")
+        #print("New sets.")
+        valuesForThisAttrib = attributeValues[attrib]
+
+        attribValueToSets = {}
+        attribValueToY = {}
+
+        attribValueToSetsNP = {}
+        attribValueToYNP = {}
+
+        for attribValue in valuesForThisAttrib:
+            attribValueToSets[attribValue] = []
+            attribValueToY[attribValue] = []
+
+        for i in range(S.shape[0]):
+            value = S[i, attrib]
+            attribValueToSets[value].append(S[i])
+            attribValueToY[value].append(y[i])
+    
+        for key in attribValueToSets:
+            arrayNPAttributes = np.array(attribValueToSets[key])
+            arrayNPY = np.array(attribValueToY[key])
+            #print(arrayNPAttributes)
+            #print(arrayNPY)
+            attribValueToSetsNP[key] = arrayNPAttributes
+            attribValueToYNP[key] = arrayNPY
+
+        #print("")
+        #print("")
+
+        return attribValueToSetsNP, attribValueToYNP
+
+    '''
+    Check if all values are the same in y
+    '''
+    def allSameLbl(self, y):
+        # Assume not empty
+        val = y[0] # = y[0,0]
+        for i in range(1, y.shape[0]):
+            if val != y[i]: # != y[i,0]:
+                return False
+        return True
+
+    '''
+    Find the most common Y value (ties are decided arbitrarily)
+    '''
+    def mostCommonLbl(self, y):
+        counts = {}
+        for i in range(y.shape[0]):
+            if y[i] in counts:
+                counts[y[i]] += 1
+            else:
+                counts[y[i]] = 1
+
+        maxCount = -1
+        maxLbl = None
+        for key in counts:
+            if counts[key] > maxCount:
+                maxCount = counts[key]
+                maxLbl = key
+
+        #print("Most common label is " + str(maxLbl))
+        return maxLbl
+
+###############################################################################################################
+# Node Class for Nodes in a DTree
+###############################################################################################################
+class Node(object):
+    '''
+    CLASS representing a node in the tree (leaf or inner). Must be initalized.
+    '''
+
+    def __init__(self):
+        self.Attribute = None
+        self.AttributeValueList = None
+        self.ChildrenAtrbValueToNode = None
+        self.LblValue = None
+
+    def setupNode(self, returnValue, attribute, attributeValueList, childrenAtrbValueToNode):
+        if returnValue != None:
+            self.LblValue = returnValue
+            return
+
+        self.Attribute = attribute
+        self.AttributeValueList = attributeValueList
+        self.ChildrenAtrbValueToNode = childrenAtrbValueToNode
+        return
+
+    def getLabel(self, value):
+        if self.LblValue != None:
+            return self.LblValue
         else:
-            dictYValuesToCounts[yVal] = 1
+            return self.ChildrenAtrbValueToNode[value[self.Attribute]].getLabel(value)
 
-    return func(dictYValuesToCounts, total, numYTypes)
+###############################################################################################################
+# Support Methods
+###############################################################################################################
 
 '''
 Calculate the entropy from a dictionary mapping value (lbl) to counts.
@@ -160,147 +333,6 @@ def ME(dictionaryYValues, countTotal, logBase):
     me = sumCountsNotMax / countTotal
     #print("Majority error is: %f" % (me))
     return me
-
-'''
-Split the sets S and lbls based on the given attribute. Dictionaries are returned
-mapping the attribute's values to the corresponding subsets for S and lbls.
-'''
-def splitOnAttrib(attrib, S, y, attributeValues):
-    #print("")
-    #print("")
-    #print("New sets.")
-    valuesForThisAttrib = attributeValues[attrib]
-
-    attribValueToSets = {}
-    attribValueToY = {}
-
-    attribValueToSetsNP = {}
-    attribValueToYNP = {}
-
-    for attribValue in valuesForThisAttrib:
-        attribValueToSets[attribValue] = []
-        attribValueToY[attribValue] = []
-
-    for i in range(S.shape[0]):
-        value = S[i, attrib]
-        attribValueToSets[value].append(S[i])
-        attribValueToY[value].append(y[i])
-    
-    for key in attribValueToSets:
-        arrayNPAttributes = np.array(attribValueToSets[key])
-        arrayNPY = np.array(attribValueToY[key])
-        #print(arrayNPAttributes)
-        #print(arrayNPY)
-        attribValueToSetsNP[key] = arrayNPAttributes
-        attribValueToYNP[key] = arrayNPY
-
-    #print("")
-    #print("")
-
-    return attribValueToSetsNP, attribValueToYNP
-
-'''
-Check if all values are the same in y
-'''
-def allSameLbl(y):
-    # Assume not empty
-    val = y[0] # = y[0,0]
-    for i in range(1, y.shape[0]):
-        if val != y[i]: # != y[i,0]:
-            return False
-    return True
-
-'''
-Find the most common Y value (ties are decided arbitrarily)
-'''
-def mostCommonLbl(y):
-    counts = {}
-    for i in range(y.shape[0]):
-        if y[i] in counts:
-            counts[y[i]] += 1
-        else:
-            counts[y[i]] = 1
-
-    maxCount = -1
-    maxLbl = None
-    for key in counts:
-        if counts[key] > maxCount:
-            maxCount = counts[key]
-            maxLbl = key
-
-    #print("Most common label is " + str(maxLbl))
-    return maxLbl
-
-'''
-CLASS representing a node in the tree (leaf or inner). Must be initalized.
-'''
-class Node(object):
-
-    def __init__(self):
-        self.Attribute = None
-        self.AttributeValueList = None
-        self.ChildrenAtrbValueToNode = None
-        self.LblValue = None
-
-    def setupNode(self, returnValue, attribute, attributeValueList, childrenAtrbValueToNode):
-        if returnValue != None:
-            self.LblValue = returnValue
-            return
-
-        self.Attribute = attribute
-        self.AttributeValueList = attributeValueList
-        self.ChildrenAtrbValueToNode = childrenAtrbValueToNode
-        return
-
-    def getLabel(self, value):
-        if self.LblValue != None:
-            return self.LblValue
-        else:
-            return self.ChildrenAtrbValueToNode[value[self.Attribute]].getLabel(value)
-
-'''
-ID3 algo
-'''
-def ID3(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, depthRemaining):
-    node = Node()
-    # TODO: Check empty y?
-    if allSameLbl(y):
-        #print("All same y")
-        lbl = y[0]
-        node.setupNode(lbl, None, None, None)
-        return node
-
-    if len(attributes) == 0:
-        #print("No More Attributes")
-        lbl = mostCommonLbl(y)
-        node.setupNode(lbl, None, None, None)
-        return node
-
-    if depthRemaining <= 0:
-        #print("Depth limit reached")
-        lbl = mostCommonLbl(y)
-        node.setupNode(lbl, None, None, None)
-        return node
-
-    attributeToSplit = findBestAttrib(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable)
-    attributesAvaliable.remove(attributeToSplit) # remove for recursion add back before completion
-    attribValueToSets, attribValueToY = splitOnAttrib(attributeToSplit, S, y, attributeValues)
-
-    attribValueToNodes = {}
-
-    for key in attribValueToSets:
-        if attribValueToY[key].size == 0:
-            #print("Empty set")
-            lbl = mostCommonLbl(y)
-            tempNode = Node()
-            tempNode.setupNode(lbl, None, None, None)
-            attribValueToNodes[key] = tempNode
-        else:
-            attribValueToNodes[key] = ID3(attribValueToSets[key], attribValueToY[key], attributes, attributeValues, func, numYTypes, attributesAvaliable, (depthRemaining - 1))
-
-    node.setupNode(None, attributeToSplit, attributeValues[attributeToSplit], attribValueToNodes)
-    attributesAvaliable.add(attributeToSplit) # added back 
-    return node
 
 '''
 Finds the most common S attribute value for each attribute. 
@@ -388,17 +420,23 @@ def loadTestData(fileData):
     y = tempSandY[:,-1]
     return S, y
 
+
+###############################################################################################################
+# MAIN Method
+###############################################################################################################
+
 '''
 Main method to run the ID3 program hard coded
 '''
 def main():    
     #Part 2
     S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
-    root = ID3(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, 6)
+    dTreeEnt = DTree()
+    dTreeEnt.buldTree(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, 6)
     Stest, ytest = loadTestData("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
     errors = 0
     for i in range(Stest.shape[0]):
-        lbl = root.getLabel(Stest[i])
+        lbl = dTreeEnt.label(Stest[i])
         if lbl != ytest[i]:
             errors += 1
 
