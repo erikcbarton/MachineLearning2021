@@ -7,6 +7,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import copy
+import os
 
 ###############################################################################################################
 # Decision Tree Class
@@ -381,8 +382,6 @@ def loadTrainData(fileNames, fileData):
     attributeValues = []
     numYTypes = 0
     attributesAvaliable = set()
-    #S
-    #y
     haveLabelValue = False
     with open(fileNames, 'r') as f:
         for line in f:
@@ -561,11 +560,13 @@ def testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attribu
 '''
 Main method to run the ID3 program hard coded
 '''
-def main():    
+def main(): 
+    script_dir = os.path.dirname(__file__)
+    start = str(script_dir)
     # 1 a, b
     print("Part 1")
-    S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
-    Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
+    S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData(start + "/car/data-desc.txt", start + "/car/train.csv")
+    Stest, ytest = loadDataSy(start + "/car/test.csv")
     
     print("Train Set")
     #testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
@@ -574,8 +575,8 @@ def main():
 
     # 2 a
     print("Part 2a")
-    S, y = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/bank/train.csv")
-    Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/bank/test.csv")
+    S, y = loadDataSy(start + "/bank/train.csv")
+    Stest, ytest = loadDataSy(start + "/bank/test.csv")
     attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformationPart2a()
 
     medians = doMedian(S, indexNumerical)
