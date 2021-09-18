@@ -422,6 +422,68 @@ def loadDataSy(fileData):
     return S, y
 
 '''
+Hard coded attribute information for part 2a
+'''
+def getAttributeInformationPart2a():
+    attributes = np.array([ "age", "job", "marital", "education", "default", "balance", "housing", "loan", "contact", "day", "month", "duration", "campaign", "pdays", "previous", "poutcome"])
+    attributeValues = [
+        ["1","0"],
+        ["admin.","unknown","unemployed","management","housemaid","entrepreneur","student","blue-collar","self-employed","retired","technician","services"],
+        ["married","divorced","single"],
+        ["unknown","secondary","primary","tertiary"],
+        ["yes","no"],
+        ["1", "0"],
+        ["yes","no"],
+        ["yes","no"],
+        ["unknown","telephone","cellular"],
+        ["1","0"],
+        ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+        ["1","0"],
+        ["1","0"],
+        ["1","0"],
+        ["1","0"],
+        ["unknown","other","failure","success"]
+        ]
+    attributesAvaliable = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+    numYTypes = 2
+    indexNumerical = [0,5,9,11,12,13,14]
+    return attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical
+
+
+'''
+finds median and splits data set if no medians provided, if medians provided then just updates the dataset.
+"1" if above or equal
+"0" if below
+'''
+def doMedian(S, indexNum, median=None):
+    if median == None:
+        print(S)
+        stringNumericCols = S[:,indexNum]
+        print(stringNumericCols)
+        floatNumericCols = stringNumericCols.astype(float)
+        print(floatNumericCols)
+        medians = np.median(floatNumericCols, axis=0)
+        print(medians)
+        for c in range(floatNumericCols.shape[1]):
+            for r in range(S.shape[0]):
+                if floatNumericCols[r, c] >= medians[c]:
+                    S[r,indexNum[c]] = "1"
+                else:
+                    S[r,indexNum[c]] = "0"
+        print(S[:,indexNum])
+        return medians
+    else:
+        stringNumericCols = S[:,indexNum]
+        floatNumericCols = stringNumericCols.astype(float)
+        for c in range(floatNumericCols.shape[1]):
+            for r in range(S.shape[0]):
+                if floatNumericCols[r, c] >= median[c]:
+                    S[r,indexNum[c]] = "1"
+                else:
+                    S[r,indexNum[c]] = "0"
+        return median
+
+'''
 Trains DTrees with all three heuristics and from min depth to max depth specified (inclusive).
 Prints the test errors on the specified test set.
 '''
@@ -470,17 +532,22 @@ Main method to run the ID3 program hard coded
 '''
 def main():    
     # 1 a, b
-    print("Part 1")
-    S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
-    Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
+    #print("Part 1")
+    #S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
+    #Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
     
-    print("Train Set")
-    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
-    print("Test Set")
-    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
+    #print("Train Set")
+    #testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
+    #print("Test Set")
+    #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
 
     # 2 a
-    print("Part 2")
+    print("Part 2a")
+    S, y = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/bank/train.csv")
+    Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/bank/test.csv")
+    attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformationPart2a()
+
+    doMedian(S, indexNumerical)
 
 
 
