@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-
+Decision Tree based on the ID3 algorithm. 
 
 @author: erikcbarton
 """
@@ -571,7 +571,7 @@ def main():
     print("Train Set")
     #testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
     print("Test Set")
-    #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
+    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
 
     # 2 a
     print("Part 2a")
@@ -582,7 +582,7 @@ def main():
     medians = doMedian(S, indexNumerical)
     doMedian(Stest, indexNumerical, medians)
 
-    #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
+    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
 
     # 2 b
     print("Part 2b")
@@ -591,7 +591,7 @@ def main():
     replaceUnknowns(S,"unknown", mostCommon)
     replaceUnknowns(Stest,"unknown", mostCommon)
 
-    #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
+    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
 
 
 if __name__ == '__main__':
