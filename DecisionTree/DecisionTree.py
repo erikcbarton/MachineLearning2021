@@ -340,7 +340,7 @@ Finds the most common S attribute value for each attribute.
 '''
 def findMostCommon(S, unknownIndicator):
     #print("Selecting the most common value for this attribute.")
-    mostCommonAttribValues = np.empty(S.shape[1], dtype=str)
+    mostCommonAttribValues = []
     for j in range(S.shape[1]):
         counts = {}
         for i in range(S.shape[0]):
@@ -357,7 +357,7 @@ def findMostCommon(S, unknownIndicator):
                 maxCount = counts[key]
                 maxAVal = key 
 
-        mostCommonAttribValues[j] = maxAVal
+        mostCommonAttribValues.append(maxAVal)
         counts.clear()
 
     #print("Most common attribute values: " + str(mostCommonAttribValues))
@@ -449,31 +449,61 @@ def getAttributeInformationPart2a():
     indexNumerical = [0,5,9,11,12,13,14]
     return attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical
 
+'''
+Hard coded attribute information for part 2b
+'''
+def getAttributeInformationPart2b():
+    attributes = np.array([ "age", "job", "marital", "education", "default", "balance", "housing", "loan", "contact", "day", "month", "duration", "campaign", "pdays", "previous", "poutcome"])
+    attributeValues = [
+        ["1","0"],
+        ["admin.","unemployed","management","housemaid","entrepreneur","student","blue-collar","self-employed","retired","technician","services"],
+        ["married","divorced","single"],
+        ["secondary","primary","tertiary"],
+        ["yes","no"],
+        ["1", "0"],
+        ["yes","no"],
+        ["yes","no"],
+        ["telephone","cellular"],
+        ["1","0"],
+        ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+        ["1","0"],
+        ["1","0"],
+        ["1","0"],
+        ["1","0"],
+        ["other","failure","success"]
+        ]
+    attributesAvaliable = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+    numYTypes = 2
+    indexNumerical = [0,5,9,11,12,13,14]
+    return attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical
+
 
 '''
 finds median and splits data set if no medians provided, if medians provided then just updates the dataset.
 "1" if above or equal
 "0" if below
 '''
-def doMedian(S, indexNum, median=None):
-    if median == None:
-        print(S)
+def doMedian(S, indexNum, median=np.array([])):
+    if median.shape[0] == 0:
+        #print(S)
         stringNumericCols = S[:,indexNum]
-        print(stringNumericCols)
+        #print(stringNumericCols)
         floatNumericCols = stringNumericCols.astype(float)
-        print(floatNumericCols)
+        #print(floatNumericCols)
         medians = np.median(floatNumericCols, axis=0)
-        print(medians)
+        #print(medians)
         for c in range(floatNumericCols.shape[1]):
             for r in range(S.shape[0]):
                 if floatNumericCols[r, c] >= medians[c]:
                     S[r,indexNum[c]] = "1"
                 else:
                     S[r,indexNum[c]] = "0"
-        print(S[:,indexNum])
+        #print(S[:,indexNum])
         return medians
     else:
+        #print(median)
         stringNumericCols = S[:,indexNum]
+        #print(stringNumericCols)
         floatNumericCols = stringNumericCols.astype(float)
         for c in range(floatNumericCols.shape[1]):
             for r in range(S.shape[0]):
@@ -481,6 +511,7 @@ def doMedian(S, indexNum, median=None):
                     S[r,indexNum[c]] = "1"
                 else:
                     S[r,indexNum[c]] = "0"
+        #print(S[:,indexNum])
         return median
 
 '''
@@ -532,13 +563,13 @@ Main method to run the ID3 program hard coded
 '''
 def main():    
     # 1 a, b
-    #print("Part 1")
-    #S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
-    #Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
+    print("Part 1")
+    S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData("C:/Users/erikc/Desktop/5350-ML/HW1/car/data-desc.txt", "C:/Users/erikc/Desktop/5350-ML/HW1/car/train.csv")
+    Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/car/test.csv")
     
-    #print("Train Set")
+    print("Train Set")
     #testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
-    #print("Test Set")
+    print("Test Set")
     #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
 
     # 2 a
@@ -547,8 +578,19 @@ def main():
     Stest, ytest = loadDataSy("C:/Users/erikc/Desktop/5350-ML/HW1/bank/test.csv")
     attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformationPart2a()
 
-    doMedian(S, indexNumerical)
+    medians = doMedian(S, indexNumerical)
+    doMedian(Stest, indexNumerical, medians)
 
+    #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
+
+    # 2 b
+    print("Part 2b")
+    attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformationPart2a()
+    mostCommon = findMostCommon(S, "unknown")
+    replaceUnknowns(S,"unknown", mostCommon)
+    replaceUnknowns(Stest,"unknown", mostCommon)
+
+    #testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
 
 
 if __name__ == '__main__':
