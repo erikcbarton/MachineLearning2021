@@ -569,7 +569,7 @@ def main():
     Stest, ytest = loadDataSy(start + "/car/test.csv")
     
     print("Train Set")
-    #testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
+    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
     print("Test Set")
     testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
 
@@ -581,7 +581,9 @@ def main():
 
     medians = doMedian(S, indexNumerical)
     doMedian(Stest, indexNumerical, medians)
-
+    print("Train Set")
+    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
+    print("Test Set")
     testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
 
     # 2 b
@@ -590,7 +592,9 @@ def main():
     mostCommon = findMostCommon(S, "unknown")
     replaceUnknowns(S,"unknown", mostCommon)
     replaceUnknowns(Stest,"unknown", mostCommon)
-
+    print("Train Set")
+    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
+    print("Test Set")
     testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
 
 
