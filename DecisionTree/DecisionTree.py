@@ -519,6 +519,7 @@ Prints the test errors on the specified test set.
 '''
 def testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, minDepth, maxDepth):
     # Try multi level with multiple functions
+    print("Accuracy:")
     print("Depth|    Ent     |     ME     |     GI   ")
     for d in range(minDepth, maxDepth+1):
         # Do for each depth
@@ -548,7 +549,7 @@ def testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attribu
             if lblGI != ytest[i]:
                 errorsGI += 1
 
-        print("  %d  |  %f  |  %f  |  %f  " % (d, errorsEnt / total, errorsME / total, errorsGI / total))
+        print("  %d  &  %f  &  %f  &  %f  " % (d, 1 - (errorsEnt / total), 1 - (errorsME / total), 1 - (errorsGI / total)))
         
 
 
