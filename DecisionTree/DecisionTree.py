@@ -565,6 +565,7 @@ def main():
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
     # 1 a, b
+    print("All values as accuracy")
     print("Part 1")
     S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData(start + "/car/data-desc.txt", start + "/car/train.csv")
     Stest, ytest = loadDataSy(start + "/car/test.csv")
