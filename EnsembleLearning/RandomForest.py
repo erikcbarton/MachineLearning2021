@@ -10,7 +10,7 @@ import numpy as np
 import copy
 import os
 import sys, getopt
-from DecisionTree import DTree
+from RandomDecisionTree import RandomDTree
 
 
 
@@ -199,7 +199,7 @@ def entropy(dictionaryYValues, countTotal, logBase):
 '''
 Baggin algorithm on descision trees
 '''
-class Bagging(object):
+class RForest(object):
     '''
     Initalize objects
     '''
@@ -209,7 +209,7 @@ class Bagging(object):
     '''
     Builds adaboost with T classifiers and tracks error rates on training and test for the boost and the sum of the stumps
     '''
-    def buldCollectionTracking(self, STrain, yTrain, attributes, attributeValues, func, numYTypes, attributesAvaliable, STest, yTest, maxDepth, T):
+    def buldCollectionTracking(self, STrain, yTrain, attributes, attributeValues, func, numYTypes, attributesAvaliable, STest, yTest, maxDepth, T, subsetCount):
         print("Starting Tracking")
         # Define running vote for test and train and error lists
         runningVotesTrain = np.zeros(yTrain.shape)
@@ -226,8 +226,8 @@ class Bagging(object):
             tempS, tempY = self.GetSubset(STrain, yTrain)
 
             # Build a tree and add to list
-            dTree = DTree()
-            dTree.buldTree(tempS, tempY, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth)
+            dTree = RandomDTree()
+            dTree.buldTree(tempS, tempY, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, subsetCount)
             self.Trees.append(dTree)
 
             # Find choices
@@ -243,7 +243,7 @@ class Bagging(object):
     '''
     Builds T trees of maximum depth maxDepth and stores for use in bagging evaluation.
     '''
-    def buildCollection(self, STrain, yTrain, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T):
+    def buildCollection(self, STrain, yTrain, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T, subsetCount):
         firstTree = None
         # Loop over T
         for i in range(T):
@@ -251,10 +251,10 @@ class Bagging(object):
             tempS, tempY = self.GetSubset(STrain, yTrain)
 
             # Build a tree and add to list
-            dTree = DTree()
+            dTree = RandomDTree()
             if i == 0:
                 firstTree = dTree
-            dTree.buldTree(tempS, tempY, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth)
+            dTree.buldTree(tempS, tempY, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, subsetCount)
             self.Trees.append(dTree)
         return firstTree
 
@@ -345,11 +345,11 @@ def getTreesAndBags(S, y, attributes, attributeValues, func, numYTypes, attribut
         # Get subset
         SPrime, TPrime = GetSubset(1000, S, y)
         # Train
-        bag = Bagging()
-        tree = bag.buildCollection(SPrime, TPrime, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T)
+        forest = RForest()
+        tree = forest.buildCollection(SPrime, TPrime, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T)
         # Store
         trees.append(tree)
-        bags.append(bag)
+        bags.append(forest)
     return trees, bags
         
 def doCalculations(S, y, classifier):
@@ -418,19 +418,22 @@ def main(argv):
     medians = doMedian(S, indexNumerical)
     doMedian(STest, indexNumerical, medians)
 
-    if(argv[0] == "b"):
-        bag = Bagging()
-        errorsTrain, errorsTest = bag.buldCollectionTracking(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, STest, yTest, 16, 500)
-        print(errorsTrain)
-        print(errorsTest)
-    elif(argv[0] == "c"):
+    randomSizes = [2, 4, 6]
+
+    if(argv[0] == "d"):
+        for rSize in randomSizes:
+            forest = RForest()
+            errorsTrain, errorsTest = forest.buldCollectionTracking(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, STest, yTest, 16, 500, rSize)
+            print(errorsTrain)
+            print(errorsTest)
+    elif(argv[0] == "e"):
         print("Do Calculations")
-        trees, bags = getTreesAndBags(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, 16, 500)
+        trees, bags = getTreesAndBags(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, 16, 500, 4) # TODO: use the best option from above for random size
         treeAvgBias, treeAvgVar, treeSquaredError = doCalculations(STest, yTest, trees)
-        bagAvgBias, bagAvgVar, bagSquaredError = doCalculations(STest, yTest, bags)
+        forestAvgBias, forestAvgVar, forestSquaredError = doCalculations(STest, yTest, bags)
         
         print("Tree bias, variance, and squared error: " + str(treeAvgBias) + "," + str(treeAvgVar) + "," + str(treeSquaredError))
-        print("Bag bias, variance, and squared error: " + str(bagAvgBias) + "," + str(bagAvgVar) + "," + str(bagSquaredError))
+        print("Forest bias, variance, and squared error: " + str(forestAvgBias) + "," + str(forestAvgVar) + "," + str(forestSquaredError))
 
 if __name__ == '__main__':
     main(sys.argv[1:])

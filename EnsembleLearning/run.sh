@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 Bagging.py c
+python3 RandomForest.py d
