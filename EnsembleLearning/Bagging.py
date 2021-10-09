@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import copy
 import os
+import sys, getopt
 from DecisionTree import DTree
 
 
@@ -173,7 +174,7 @@ def doMedian(S, indexNum, median=np.array([])):
 
 
 ##################################################################################################################################################################################################
-# AdaBoost
+# Bagging
 ##################################################################################################################################################################################################
 
 '''
@@ -196,7 +197,7 @@ def entropy(dictionaryYValues, countTotal, logBase):
     return entFinal
 
 '''
-Adaboost algorithm on descision stumps
+Baggin algorithm on descision trees
 '''
 class Bagging(object):
     '''
@@ -209,13 +210,18 @@ class Bagging(object):
     Builds adaboost with T classifiers and tracks error rates on training and test for the boost and the sum of the stumps
     '''
     def buldCollectionTracking(self, STrain, yTrain, attributes, attributeValues, func, numYTypes, attributesAvaliable, STest, yTest, maxDepth, T):
+        print("Starting Tracking")
         # Define running vote for test and train and error lists
         runningVotesTrain = np.zeros(yTrain.shape)
         runningVotesTest = np.zeros(yTest.shape)
         errorsTest = []
         errorsTrain = []
+        itter = 0
         # Loop over T
         for i in range(T):
+            if i == itter:
+                print("Starting itter: " + str(i))
+                itter += 100
             # Get a new data subset
             tempS, tempY = self.GetSubset(STrain, yTrain)
 
@@ -238,6 +244,7 @@ class Bagging(object):
     Builds T trees of maximum depth maxDepth and stores for use in bagging evaluation.
     '''
     def buildCollection(self, STrain, yTrain, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T):
+        firstTree = None
         # Loop over T
         for i in range(T):
             # Get a new data subset
@@ -245,8 +252,11 @@ class Bagging(object):
 
             # Build a tree and add to list
             dTree = DTree()
+            if i == 0:
+                firstTree = dTree
             dTree.buldTree(tempS, tempY, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth)
             self.Trees.append(dTree)
+        return firstTree
 
     '''
     Returns the evaluated label for the bagged trees.
@@ -314,27 +324,113 @@ def countErrors(bagged, S, y):
             errors += 1
 
     return errors
+'''
+Gets the rando subset of sepecified size without replacement
+'''
+def GetSubset(number, S, y):
+    # Get out the random rows and return
+    random_indices = np.random.choice(S.shape[0], size=number, replace=False)
+    return S[random_indices, :], y[random_indices]
+
+'''
+Gets 100 trees and 100 baggs of 500 using data subsets of 1000
+'''
+def getTreesAndBags(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T):
+    # Define containers
+    trees = []
+    bags = []
+    # Loop 100
+    for i in range(100):
+        print(i)
+        # Get subset
+        SPrime, TPrime = GetSubset(1000, S, y)
+        # Train
+        bag = Bagging()
+        tree = bag.buildCollection(SPrime, TPrime, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T)
+        # Store
+        trees.append(tree)
+        bags.append(bag)
+    return trees, bags
+        
+def doCalculations(S, y, classifier):
+    BiasList = []
+    VarianceList = []
+    SquaredErrorList = []
+    AvgBias = 0.0
+    AvgVar = 0.0
+    SquaredError = 0.0
+
+    for i in range(y.shape[0]):
+        runningSum = 0.0
+        tempListPredictions = []
+        for j in range(len(classifier)):
+            lbl = classifier[j].label(S[i,:])
+            if lbl == "yes":
+                runningSum += 1
+                tempListPredictions.append(1)
+            else:
+                runningSum -= 1
+                tempListPredictions.append(-1)
+
+        avgRunning = runningSum / len(classifier)
+
+        bias = 0.0
+        if y[i] == "yes":
+            bias = avgRunning - 1
+        else:
+            bias = avgRunning - (-1)
+        BiasList.append(bias**2)
+
+        runningSquared = 0.0
+        for j in range(len(classifier)):
+            runningSquared += (tempListPredictions[j] - avgRunning)**2
+        
+        variance = (1/(len(classifier) - 1)) * runningSquared
+        VarianceList.append(variance)
+
+        SquaredErrorList.append(BiasList[i] + VarianceList[i])
+
+    for i in range(y.shape[0]):
+        AvgBias += BiasList[i]
+        AvgVar += VarianceList[i]
+        SquaredError += SquaredErrorList[i]
+    
+    AvgBias = AvgBias / (y.shape[0])
+    AvgVar = AvgVar / (y.shape[0])
+    SquaredError = SquaredError / (y.shape[0])
+
+    return AvgBias, AvgVar, SquaredError
+
+
+        
 
 ##################################################################################################################################################################################################
 # MAIN
 ##################################################################################################################################################################################################
 
-def main():
+def main(argv):
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
-    
     S, y = loadDataSy(start + "/bank/train.csv")
-    Stest, ytest = loadDataSy(start + "/bank/test.csv")
+    STest, yTest = loadDataSy(start + "/bank/test.csv")
     attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformation()
 
     medians = doMedian(S, indexNumerical)
     doMedian(STest, indexNumerical, medians)
 
-    bag = Bagging()
-    errorsTrain, errorsTest = bag.buldCollectionTracking(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, STest, yTest, 16, 500)
-    print(errorsTrain)
-    print(errorsTest)
-
+    if(argv[0] == "b"):
+        bag = Bagging()
+        errorsTrain, errorsTest = bag.buldCollectionTracking(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, STest, yTest, 16, 500)
+        print(errorsTrain)
+        print(errorsTest)
+    elif(argv[0] == "c"):
+        print("Do Calculations")
+        trees, bags = getTreesAndBags(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, 16, 500)
+        treeAvgBias, treeAvgVar, treeSquaredError = doCalculations(STest, yTest, trees)
+        bagAvgBias, bagAvgVar, bagSquaredError = doCalculations(STest, yTest, bags)
+        
+        print("Tree bias, variance, and squared error: " + str(treeAvgBias) + "," + str(treeAvgVar) + "," + str(treeSquaredError))
+        print("Bag bias, variance, and squared error: " + str(bagAvgBias) + "," + str(bagAvgVar) + "," + str(bagSquaredError))
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
