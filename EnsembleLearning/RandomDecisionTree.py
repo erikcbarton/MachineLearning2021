@@ -46,7 +46,7 @@ class RandomDTree(object):
             node.setupNode(lbl, None, None, None)
             return node
 
-        if len(attributes) == 0:
+        if len(attributesAvaliable) == 0:
             #print("No More Attributes")
             lbl = self.mostCommonLbl(y)
             node.setupNode(lbl, None, None, None)
@@ -572,48 +572,5 @@ def testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attribu
 
 
 
-###############################################################################################################
-# MAIN Method
-###############################################################################################################
 
-'''
-Main method to run the ID3 program hard coded
-'''
-def main(): 
-    script_dir = os.path.dirname(__file__)
-    start = str(script_dir)
-    # 1 a, b
-    print("All values as accuracy")
-    print("Part 1")
-    S, y, attributes, attributeValues, attributesAvaliable, numYTypes = loadTrainData(start + "/car/data-desc.txt", start + "/car/train.csv")
-    Stest, ytest = loadDataSy(start + "/car/test.csv")
-    
-    print("Train Set")
-    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
-    print("Test Set")
-    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 6)
-
-    # 2 a
-    print("Part 2a")
-    S, y = loadDataSy(start + "/bank/train.csv")
-    Stest, ytest = loadDataSy(start + "/bank/test.csv")
-    attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformationPart2a()
-
-    medians = doMedian(S, indexNumerical)
-    doMedian(Stest, indexNumerical, medians)
-    print("Train Set")
-    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
-    print("Test Set")
-    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
-
-    # 2 b
-    print("Part 2b")
-    attributes, attributeValues, attributesAvaliable, numYTypes, indexNumerical = getAttributeInformationPart2a()
-    mostCommon = findMostCommon(S, "unknown")
-    replaceUnknowns(S,"unknown", mostCommon)
-    replaceUnknowns(Stest,"unknown", mostCommon)
-    print("Train Set")
-    testTrainMultiLevel(S, y, S, y, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
-    print("Test Set")
-    testTrainMultiLevel(S, y, Stest, ytest, attributes, attributeValues, attributesAvaliable, numYTypes, 1, 16)
 
