@@ -335,7 +335,7 @@ def GetSubset(number, S, y):
 '''
 Gets 100 trees and 100 baggs of 500 using data subsets of 1000
 '''
-def getTreesAndBags(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T):
+def getTreesAndBags(S, y, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T, randoSize):
     # Define containers
     trees = []
     bags = []
@@ -346,7 +346,7 @@ def getTreesAndBags(S, y, attributes, attributeValues, func, numYTypes, attribut
         SPrime, TPrime = GetSubset(1000, S, y)
         # Train
         forest = RForest()
-        tree = forest.buildCollection(SPrime, TPrime, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T)
+        tree = forest.buildCollection(SPrime, TPrime, attributes, attributeValues, func, numYTypes, attributesAvaliable, maxDepth, T, randoSize)
         # Store
         trees.append(tree)
         bags.append(forest)
