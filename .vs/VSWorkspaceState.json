@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\DecisionTree"
+    "\\DecisionTree",
+    "\\EnsembleLearning"
   ],
-  "SelectedNode": "\\DecisionTree\\DecisionTree.py",
+  "SelectedNode": "\\EnsembleLearning\\run.sh",
   "PreviewInSolutionExplorer": false
 }
