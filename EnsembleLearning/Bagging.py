@@ -409,6 +409,7 @@ def doCalculations(S, y, classifier):
 ##################################################################################################################################################################################################
 
 def main(argv):
+    print("Bagging")
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
     S, y = loadDataSy(start + "/bank/train.csv")
@@ -421,6 +422,7 @@ def main(argv):
     if(argv[0] == "b"):
         bag = Bagging()
         errorsTrain, errorsTest = bag.buldCollectionTracking(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, STest, yTest, 16, 500)
+        print("Random forest errors train and test:")
         print(errorsTrain)
         print(errorsTest)
     elif(argv[0] == "c"):

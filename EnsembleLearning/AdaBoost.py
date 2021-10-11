@@ -268,7 +268,7 @@ class AdaBoostStumps(object):
             #print("Eps train = " + str(epsT))
 
             ErrorsStumpsTrain.append(numberOfErrorsThisStumpTrain)
-            ErrorsStumpsTest.append(runningSumStumpErrorsTest)
+            ErrorsStumpsTest.append(numberOfErrorsThisStumpTest)
 
             if(epsT > 1e-8):
                 innerLog = (1 - epsT)/(epsT)
@@ -424,6 +424,7 @@ def countErrors(ada, S, y):
 def main():
 
     # ---
+    print("Adaboost (currently not working)")
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
     S, y = loadDataSy(start + "/bank/train.csv")
@@ -435,7 +436,7 @@ def main():
     doMedian(STest, indexNumerical, medians)
 
     adaBuild = AdaBoostStumps()
-    ErrorsAdaBoostTrain, ErrorsAdaBoostTest, ErrorsStumpsTrain, ErrorsStumpsTest = adaBuild.buldCollectionTracking(S, y, attributes, attributeValues, CountErrors, numYTypes, attributesAvaliable, STest, yTest, 100)
+    ErrorsAdaBoostTrain, ErrorsAdaBoostTest, ErrorsStumpsTrain, ErrorsStumpsTest = adaBuild.buldCollectionTracking(S, y, attributes, attributeValues, ME, numYTypes, attributesAvaliable, STest, yTest, 100)
     print("Stumps train, test:")
     print(ErrorsStumpsTrain)
     print(ErrorsStumpsTest)

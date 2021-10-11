@@ -409,6 +409,7 @@ def doCalculations(S, y, classifier):
 ##################################################################################################################################################################################################
 
 def main(argv):
+    print("Random Forest")
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
     S, y = loadDataSy(start + "/bank/train.csv")
@@ -424,6 +425,7 @@ def main(argv):
         for rSize in randomSizes:
             forest = RForest()
             errorsTrain, errorsTest = forest.buldCollectionTracking(S, y, attributes, attributeValues, entropy, numYTypes, attributesAvaliable, STest, yTest, 16, 500, rSize)
+            print("Random forest errors train and test:")
             print(errorsTrain)
             print(errorsTest)
     elif(argv[0] == "e"):
