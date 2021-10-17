@@ -48,13 +48,13 @@ class WeightedDTree(object):
 
         if len(attributesAvaliable) == 0: # TODO: Fix
             #print("No More Attributes")
-            lbl = self.mostCommonLbl(y)
+            lbl = self.mostCommonLbl(y, rowPartials)
             node.setupNode(lbl, None, None, None)
             return node
 
         if depthRemaining <= 0:
             #print("Depth limit reached")
-            lbl = self.mostCommonLbl(y)
+            lbl = self.mostCommonLbl(y, rowPartials)
             node.setupNode(lbl, None, None, None)
             return node
 
@@ -67,7 +67,7 @@ class WeightedDTree(object):
         for key in attribValueToSets:
             if attribValueToY[key].size == 0:
                 #print("Empty set")
-                lbl = self.mostCommonLbl(y)
+                lbl = self.mostCommonLbl(y, rowPartials)
                 tempNode = Node()
                 tempNode.setupNode(lbl, None, None, None)
                 attribValueToNodes[key] = tempNode
@@ -241,13 +241,13 @@ class WeightedDTree(object):
     '''
     Find the most common Y value (ties are decided arbitrarily)
     '''
-    def mostCommonLbl(self, y):
+    def mostCommonLbl(self, y, weights):
         counts = {}
         for i in range(y.shape[0]):
             if y[i] in counts:
-                counts[y[i]] += 1
+                counts[y[i]] += weights[i]
             else:
-                counts[y[i]] = 1
+                counts[y[i]] = weights[i]
 
         maxCount = -1
         maxLbl = None
