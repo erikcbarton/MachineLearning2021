@@ -197,7 +197,7 @@ def entropy(dictionaryYValues, countTotal, logBase):
     return entFinal
 
 '''
-Baggin algorithm on descision trees
+Bagging algorithm on descision trees
 '''
 class Bagging(object):
     '''

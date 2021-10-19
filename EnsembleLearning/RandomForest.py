@@ -197,7 +197,7 @@ def entropy(dictionaryYValues, countTotal, logBase):
     return entFinal
 
 '''
-Baggin algorithm on descision trees
+Random Forest algorithm on descision trees
 '''
 class RForest(object):
     '''
