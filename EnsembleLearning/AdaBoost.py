@@ -270,13 +270,11 @@ class AdaBoostStumps(object):
             ErrorsStumpsTrain.append(numberOfErrorsThisStumpTrain)
             ErrorsStumpsTest.append(numberOfErrorsThisStumpTest)
 
+            alphat = 0.0
             if(epsT > 1e-8):
-                innerLog = (1 - epsT)/(epsT)
+                alphat = 0.5 * (np.log( (1 - epsT)/(epsT) ))
             else:
-                innerLog = 1
-            #print("innerLog = " + str(innerLog))
-            alphat = 0.5 * (np.log( innerLog ))
-            #print("alpha = " + str(alphat))
+                alphat = 1.0
 
             self.Stumps.append(dStump)
             self.Alphas.append(alphat)
@@ -305,20 +303,9 @@ class AdaBoostStumps(object):
             ErrorsAdaBoostTest.append(errorsBoostTest)
 
             yFloat = yTrain.astype(float)
-            yH = yFloat * runningWeightedSumTrain #stumpPredictionsTrain
-
-            #print("yH = " + str(yH))
-
-            negAlphaYH = -1 * alphat * yH
-            expo = np.exp(negAlphaYH)
-
-            #print("Expo = " + str(expo))
-            tempExpo = expo[errorIdxTrain]
-            DExpo = weightsValues * expo
-
-            #print("DExpo = " + str(DExpo))
-            sumValue = np.sum(DExpo)
-            weightsValues = DExpo / sumValue
+            preNorm = self.DtPlus(stumpPredictionsTrain, yFloat, alphat, weightsValues)
+            sumValue = np.sum(preNorm)
+            weightsValues = preNorm / sumValue
             #print("New weights = " + str(weightsValues))
             #print("")
 
@@ -338,10 +325,9 @@ class AdaBoostStumps(object):
             numberOfErrorsThisStumpTrain, stumpPredictionsTrain, epsT = self.countErrorsStump(dStump, STrain, yTrain, weightsValues)
 
             if(epsT > 1e-8):
-                innerLog = (1 - epsT)/(epsT)
+                alphat = 0.5 * (np.log( (1 - epsT)/(epsT) ))
             else:
-                innerLog = 1
-            alphat = 0.5 * (np.log( innerLog ))
+                alphat = 1
 
             self.Stumps.append(dStump)
             self.Alphas.append(alphat)
@@ -349,15 +335,10 @@ class AdaBoostStumps(object):
             stumpPredictionsTrain = stumpPredictionsTrain.astype(float)
 
             yFloat = yTrain.astype(float)
-            yH = yFloat * stumpPredictionsTrain
+            preNorm = self.DtPlus(stumpPredictionsTrain, yFloat, alphat, weightsValues)
 
-            negAlphaYH = -1 * alphat * yH
-            expo = np.exp(negAlphaYH)
-
-            DExpo = weightsValues * expo
-
-            sumValue = np.sum(DExpo)
-            weightsValues = DExpo / sumValue
+            sumValue = np.sum(preNorm)
+            weightsValues = preNorm / sumValue
 
     '''
     Choose a label (int)
@@ -403,6 +384,18 @@ class AdaBoostStumps(object):
                 errorIdx.append(i)
         return errorCount, errorIdx
 
+    '''
+    Builds the pre-normalized new weights
+    '''
+    def DtPlus(self, runningWeightedSum, yFloat, alphat, weightsValues):
+        result = np.zeros(weightsValues.shape)
+        for i in range(yFloat.shape[0]):
+            if (yFloat[i] >= 0.0 and runningWeightedSum[i] < 0.0) or (yFloat[i] < 0.0 and runningWeightedSum[i] >= 0.0):
+                result[i] = weightsValues[i] * np.exp(1.0 * alphat)
+            else:
+                result[i] = weightsValues[i] * np.exp(-1.0 * alphat)
+        return result
+
 ##################################################################################################################################################################################################
 # HELPERS
 ##################################################################################################################################################################################################
@@ -424,7 +417,7 @@ def countErrors(ada, S, y):
 def main():
 
     # ---
-    print("Adaboost (currently not working)")
+    print("Adaboost")
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
     S, y = loadDataSy(start + "/bank/train.csv")
@@ -436,7 +429,7 @@ def main():
     doMedian(STest, indexNumerical, medians)
 
     adaBuild = AdaBoostStumps()
-    ErrorsAdaBoostTrain, ErrorsAdaBoostTest, ErrorsStumpsTrain, ErrorsStumpsTest = adaBuild.buldCollectionTracking(S, y, attributes, attributeValues, ME, numYTypes, attributesAvaliable, STest, yTest, 100)
+    ErrorsAdaBoostTrain, ErrorsAdaBoostTest, ErrorsStumpsTrain, ErrorsStumpsTest = adaBuild.buldCollectionTracking(S, y, attributes, attributeValues, ME, numYTypes, attributesAvaliable, STest, yTest, 500)
     print("Stumps train, test:")
     print(ErrorsStumpsTrain)
     print(ErrorsStumpsTest)
