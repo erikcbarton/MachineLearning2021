@@ -4,6 +4,6 @@
     "\\DecisionTree",
     "\\EnsembleLearning"
   ],
-  "SelectedNode": "\\EnsembleLearning\\run.sh",
+  "SelectedNode": "\\EnsembleLearning\\GradientDescent.py",
   "PreviewInSolutionExplorer": false
 }
