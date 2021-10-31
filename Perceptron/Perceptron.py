@@ -69,8 +69,7 @@ Voted Perceptron algorithm
 def VotedPerceptron(S, y, ephocs, r=1):
     w = np.zeros(S.shape[1])
 
-    wVectors = []
-    Cs = []
+    wToCVectors = {}
     C = 0
     for e in range(ephocs):
         for i in range(S.shape[0]):
@@ -80,8 +79,11 @@ def VotedPerceptron(S, y, ephocs, r=1):
             # If wrong take step
             if (prediction >= 0.0 and y[i] < 0.0) or (prediction < 0.0 and y[i] >= 0.0):
                 # Store the old one
-                wVectors.append(np.array(w))
-                Cs.append(C)
+                stringW = str(w) 
+                if stringW in wToCVectors:
+                    wToCVectors[stringW] = (wToCVectors[stringW][0], wToCVectors[stringW][1] + C)
+                else:
+                    wToCVectors[stringW] = (np.array(w), C) # make sure is copy
 
                 # Take the step
                 step = r * (y[i] * S[i])
@@ -91,9 +93,12 @@ def VotedPerceptron(S, y, ephocs, r=1):
                 C=1
             else:
                 C+=1
-    wVectors.append(np.array(w))
-    Cs.append(C)
-    return wVectors, Cs
+    stringW = str(w)
+    if stringW in wToCVectors:
+        wToCVectors[stringW] = (wToCVectors[stringW][0], wToCVectors[stringW][1] + C)
+    else:
+        wToCVectors[stringW] = (np.array(w), C) # make sure is copy
+    return wToCVectors
 
 '''
 Averaged Perceptron algorithm
@@ -129,12 +134,13 @@ def countErrors(w, S, y):
 
     return errors
 
-def countErrorsVoted(Ws, Cs, S, y):
+def countErrorsVoted(wToC, S, y):
     errors = 0
     for i in range(S.shape[0]):
         prediction = 0.0
-        for j in range(len(Ws)):
-            prediction += Cs[j] * Ws[j].dot(S[i])
+        for key in wToC:
+            W, C = wToC[key]
+            prediction += C * W.dot(S[i])
         
 
         if (prediction >= 0.0 and y[i] < 0.0) or (prediction < 0.0 and y[i] >= 0.0):
@@ -142,10 +148,13 @@ def countErrorsVoted(Ws, Cs, S, y):
 
     return errors
 
-def printVoted(Ws, Cs):
-    for i in range(len(Ws)):
-        print("W_" + str(i) +": " + str(Ws[i]))
-        print("C_" + str(i) +": " + str(Cs[i]))
+def printVoted(wToC):
+    i = 0
+    for key in wToC:
+        W, C = wToC[key]
+        print("W_" + str(i) +": [" + str(W[0]) + ", " + str(W[1]) + ", " + str(W[2]) + ", " + str(W[3]) + ", " + str(W[4]) 
+            + "] " + "C_" + str(i) +": " + str(C))
+        i+= 1
 
 
 
@@ -171,10 +180,10 @@ def main(argv):
         print("With " + str(errorsPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
 
     if(argv[0] == "b"):
-        wVectors, cVectors = VotedPerceptron(S, y, 10)
+        wToCMap = VotedPerceptron(S, y, 10)
         print("Voting Perceptron W vectors and Cs:")
-        printVoted(wVectors, cVectors)
-        errorsVPerceptron = countErrorsVoted(wVectors, cVectors, STest, yTest)
+        printVoted(wToCMap)
+        errorsVPerceptron = countErrorsVoted(wToCMap, STest, yTest)
         print("With " + str(errorsVPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
 
     if(argv[0] == "c"):
