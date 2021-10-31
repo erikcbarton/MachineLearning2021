@@ -142,45 +142,53 @@ def countErrorsVoted(Ws, Cs, S, y):
 
     return errors
 
+def printVoted(Ws, Cs):
+    for i in range(len(Ws)):
+        print("W_" + str(i) +": " + str(Ws[i]))
+        print("C_" + str(i) +": " + str(Cs[i]))
+
+
+
 ##################################################################################################################################################################################################
 # MAIN
 ##################################################################################################################################################################################################
 
-def main(): #argv
-    #script_dir = os.path.dirname(__file__)
-    #start = str(script_dir)
+def main(argv):
+    script_dir = os.path.dirname(__file__)
+    start = str(script_dir)
     
-    S, y = loadDataSy("/bank-note/bank-note/train.csv")
-    STest, yTest = loadDataSy("/bank-note/bank-note/test.csv")
+    S, y = loadDataSy(start + "/bank-note/bank-note/train.csv")
+    STest, yTest = loadDataSy(start + "/bank-note/bank-note/test.csv")
 
     changeY(y)
     changeY(yTest)
 
-    #if(argv[0] == "a"):
-    #w = Perceptron(S, y, 10)
-    #print("Perceptron W:")
-    #print(w)
-    #errorsPerceptron = countErrors(w, STest, yTest)
-    #print("With " + str(errorsPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
+    if(argv[0] == "a"):
+        w = Perceptron(S, y, 10)
+        print("Perceptron W:")
+        print(w)
+        errorsPerceptron = countErrors(w, STest, yTest)
+        print("With " + str(errorsPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
 
-    #wVectors, cVectors = VotedPerceptron(S, y, 10)
-    #print("Perceptron W vectors and Cs:")
-    #print(len(wVectors)) #TODO: fix the way these print
-    #print(len(cVectors))
-    #errorsVPerceptron = countErrorsVoted(wVectors, cVectors, STest, yTest)
-    #print("With " + str(errorsVPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
+    if(argv[0] == "b"):
+        wVectors, cVectors = VotedPerceptron(S, y, 10)
+        print("Voting Perceptron W vectors and Cs:")
+        printVoted(wVectors, cVectors)
+        errorsVPerceptron = countErrorsVoted(wVectors, cVectors, STest, yTest)
+        print("With " + str(errorsVPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
 
-    #w = AvgPerceptron(S, y, 10)
-    #print("Average Perceptron W:")
-    #print(w)
-    #errorsPerceptron = countErrors(w, STest, yTest)
-    #print("With " + str(errorsPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
+    if(argv[0] == "c"):
+        w = AvgPerceptron(S, y, 10)
+        print("Average Perceptron W:")
+        print(w)
+        errorsPerceptron = countErrors(w, STest, yTest)
+        print("With " + str(errorsPerceptron / (0.0 + yTest.shape[0])) + " average prediction error on the test set.")
 
 
 
 
 if __name__ == '__main__':
-    main() #(sys.argv[1:])
+    main(sys.argv[1:])
 
 
 

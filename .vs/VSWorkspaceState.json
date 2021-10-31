@@ -2,8 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\DecisionTree",
-    "\\EnsembleLearning"
+    "\\EnsembleLearning",
+    "\\LinearRegression",
+    "\\Perceptron"
   ],
-  "SelectedNode": "\\EnsembleLearning\\GradientDescent.py",
+  "SelectedNode": "\\Perceptron\\Perceptron.py",
   "PreviewInSolutionExplorer": false
 }
