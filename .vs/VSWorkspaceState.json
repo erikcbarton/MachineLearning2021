@@ -4,8 +4,10 @@
     "\\DecisionTree",
     "\\EnsembleLearning",
     "\\LinearRegression",
-    "\\Perceptron"
+    "\\Perceptron",
+    "\\Perceptron\\bank-note",
+    "\\Perceptron\\bank-note\\bank-note"
   ],
-  "SelectedNode": "\\Perceptron\\Perceptron.py",
+  "SelectedNode": "\\Perceptron",
   "PreviewInSolutionExplorer": false
 }
