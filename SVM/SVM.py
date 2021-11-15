@@ -1,5 +1,3 @@
-
-
 # -*- coding: utf-8 -*-
 """
 
@@ -184,7 +182,6 @@ def svmDualObjectiveKernel(alpha, *args):
     sumIJ = np.sum(yAlphaX)
 
     sumAlpha = np.sum(alpha)
-
     return 0.5 * sumIJ - sumAlpha
 
 
