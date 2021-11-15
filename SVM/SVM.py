@@ -1,5 +1,3 @@
-
-
 # -*- coding: utf-8 -*-
 """
 
@@ -12,6 +10,7 @@ import copy
 import os
 import sys, getopt
 from scipy.optimize import minimize
+from scipy.spatial.distance import pdist, squareform
 
 
 
@@ -23,7 +22,7 @@ from scipy.optimize import minimize
 '''
 Loads test data from the specified file - expects ',' delim. Adds in a column of 1's as the frist column of S.
 '''
-def loadDataSy(fileData):
+def loadDataSyWithOnes(fileData):
     tempSandY = np.genfromtxt(fileData, dtype=float, delimiter=',')
     S = tempSandY[:,0:-1]
     y = tempSandY[:,-1]
@@ -31,6 +30,13 @@ def loadDataSy(fileData):
     oneCol = np.ones(S.shape[0])
     oneCol = oneCol[..., np.newaxis]
     S = all_data = np.append(S, oneCol, axis = 1)
+
+    return S, y
+
+def loadDataSy(fileData):
+    tempSandY = np.genfromtxt(fileData, dtype=float, delimiter=',')
+    S = tempSandY[:,0:-1]
+    y = tempSandY[:,-1]
 
     return S, y
 
@@ -151,7 +157,44 @@ def svmDualObjective(alpha, *args):
 
     return 0.5 * sumIJ - sumAlpha
 
+'''
+Dual objective function. Linearized.
+'''
+def svmDualObjectiveVector(alpha, *args):
+    x, y = args
+    
+    yAlpha = np.multiply(np.outer(y, y), np.outer(alpha, alpha))
+    yAlphaX = np.multiply(yAlpha, x.dot(x.T))
+    sumIJ = np.sum(yAlphaX)
 
+    sumAlpha = np.sum(alpha)
+
+    return 0.5 * sumIJ - sumAlpha
+
+'''
+Dual objective function. Linearized. Using Kernel K
+'''
+def svmDualObjectiveKernel(alpha, *args):
+    x, y, gamma = args
+    Kval = K(x, gamma)
+    yAlpha = np.multiply(np.outer(y, y), np.outer(alpha, alpha))
+    yAlphaX = np.multiply(yAlpha, Kval)
+    sumIJ = np.sum(yAlphaX)
+
+    sumAlpha = np.sum(alpha)
+
+    return 0.5 * sumIJ - sumAlpha
+
+
+def K(X, gamma):
+    p = pdist(X, 'euclidean')
+    pairwise_dists = squareform(p)
+    K = np.exp(-1 * np.square(pairwise_dists) / gamma)
+    return K
+
+def KSingle(xi, xj, gamma):
+    normedSquared = np.linalg.norm(xi - xj) ** 2
+    return np.exp(-normedSquared / gamma)
 
 
 ##################################################################################################################################################################################################
@@ -168,13 +211,59 @@ def countErrors(w, S, y):
 
     return errors
 
-def countErrorsVoted(Ws, Cs, S, y):
+def getIdxNonZero(alphas, c):
+    allNon0 = []
+    btw = []
+    for i in range(alphas.shape[0]):
+        if alphas[i] > 0.0:
+            allNon0.append(i)
+            if alphas[i] < c:
+                btw.append(i)
+    if len(allNon0) == alphas.shape[0]:
+        print("Same Length!!!")
+    return allNon0, btw
+
+def getOptimalW(alphaStars, supportVecs, y):
+    ay = np.multiply(alphaStars, y)
+    #oneCol[..., np.newaxis]
+    ay = ay[..., np.newaxis]
+    allMulted = np.multiply(ay, supportVecs)
+    return np.sum(allMulted, axis=0)
+
+def getOptimalB(w, bVecs, y):
+    sum = 0.0
+    for i in range(bVecs.shape[0]):
+        sum += y[i] - w.dot(bVecs[i])
+    return sum / bVecs.shape[0]
+
+def getOptimalBK(alphas, supportVecs, ySupport, gamma, bVecs, y):
+    sum = 0.0
+    for i in range(bVecs.shape[0]):
+        
+        partialSum = 0.0
+        for j in range(alphas.shape[0]):
+            partialSum += alphas[j] * ySupport[j] * KSingle(supportVecs[j], bVecs[i], gamma)
+
+        sum += y[i] - partialSum
+
+    return sum / bVecs.shape[0]
+
+def countErrorsK(alphas, supportVecs, ySupport, b, gamma, S, y):
+    # print("Alphas: " + str(alphas.shape))
+    # print("supportVecs: " + str(supportVecs.shape))
+    # print("ySupport: " + str(ySupport.shape))
+    # print("b: " + str(b))
+    # print("gamma: " + str(gamma))
+    # print("S: " + str(S.shape))
+    # print("y: " + str(y.shape))
     errors = 0
     for i in range(S.shape[0]):
         prediction = 0.0
-        for j in range(len(Ws)):
-            prediction += Cs[j] * Ws[j].dot(S[i])
-        
+        for j in range(alphas.shape[0]):
+            prediction += alphas[j] * ySupport[j] * KSingle(supportVecs[j], S[i], gamma)
+        prediction += b
+
+        # print(prediction)
 
         if (prediction >= 0.0 and y[i] < 0.0) or (prediction < 0.0 and y[i] >= 0.0):
             errors+=1
@@ -182,38 +271,9 @@ def countErrorsVoted(Ws, Cs, S, y):
     return errors
 
 
-
 ##################################################################################################################################################################################################
 # MAIN
 ##################################################################################################################################################################################################
-
-
-def calVolume(x):
-    L = x[0]
-    W = x[1]
-    H = x[2]
-    Volume = L*H*W
-    return Volume
-
-
-# define the function of surface
-def calSurface(x):
-    L = x[0]
-    W = x[1]
-    H = x[2]
-    Surface = 2*(L*H + H*W + L*W)
-    return Surface
-
-# define the objective function: maximize vol <=> minimize -vol
-def objective(x):
-    return -calVolume(x)
-
-
-# define the constrain for optimization
-def constrain(x):
-    return 10-calSurface(x)
-
-
 
 
 
@@ -221,49 +281,98 @@ def main(argv):
     script_dir = os.path.dirname(__file__)
     start = str(script_dir)
     
-    S, y = loadDataSy(start + "/bank-note/bank-note/train.csv")
-    STest, yTest = loadDataSy(start + "/bank-note/bank-note/test.csv")
+    SOnes, y = loadDataSyWithOnes(start + "/bank-note/bank-note/train.csv")
+    STestOnes, yTest = loadDataSyWithOnes(start + "/bank-note/bank-note/test.csv")
+    S, _ = loadDataSy(start + "/bank-note/bank-note/train.csv")
+    STest, _ = loadDataSy(start + "/bank-note/bank-note/test.csv")
 
     changeY(y)
     changeY(yTest)
 
     C = [(100.0/873.0), (500.0/873.0), (700.0/873.0)]
+    gamma = [0.1, 0.5, 1, 5, 100]
 
     if(argv[0] == "1a"):
         for c in C:
             print("C value of " + str(c))
-            w, numEphocs, _ = SSGD_SVM(S, y, 100, scheduleA, C=c, doRando=True)
+            w, numEphocs, _ = SSGD_SVM(SOnes, y, 100, scheduleA, C=c, doRando=True)
             print("Error train set: ")
-            print(countErrors(w, STest, yTest) / S.shape[0])
+            print(countErrors(w, SOnes, y) / S.shape[0])
             print("Error test set: ")
-            print(countErrors(w, STest, yTest) / STest.shape[0])
+            print(countErrors(w, STestOnes, yTest) / STestOnes.shape[0])
             print("Weights: ")
             print(w)
 
     if(argv[0] == "1b"):
         for c in C:
             print("C value of " + str(c))
-            w, numEphocs, _ = SSGD_SVM(S, y, 100, scheduleB, C=c, doRando=True)
+            w, numEphocs, _ = SSGD_SVM(SOnes, y, 100, scheduleB, C=c, doRando=True)
             print("Error train set: ")
-            print(countErrors(w, STest, yTest) / S.shape[0])
+            print(countErrors(w, SOnes, y) / S.shape[0])
             print("Error test set: ")
-            print(countErrors(w, STest, yTest) / STest.shape[0])
+            print(countErrors(w, STestOnes, yTest) / STestOnes.shape[0])
             print("Weights: ")
             print(w)
 
     if(argv[0] == "2a"):
+        for c in C:
+            print("C value of " + str(c))
+            args = (S, y)
+            bounds = [(0.0, c)] * S.shape[0]
+            cons = ({'type':'eq','fun':lambda x: x.dot(y)})
+            x0 = np.zeros(S.shape[0], dtype='float')
+
+            sol = minimize(fun=svmDualObjectiveVector, x0=x0, args=args, method='SLSQP', constraints=cons, bounds=bounds)
+            alphas = sol.x
+
+            allNon0Idx, btw0andC = getIdxNonZero(alphas, c)
+
+            supportVecs = S[allNon0Idx, :]
+            supportVecY = y[allNon0Idx]
+            alphaStar = alphas[allNon0Idx]
+            bVecs = S[btw0andC, :]
+            bVecY = y[btw0andC]
+
+            wStar = getOptimalW(alphaStar, supportVecs, supportVecY)
+            bStar = getOptimalB(wStar, bVecs, bVecY)
+            w = np.append(wStar, bStar)
+
+            print("Error train set: ")
+            print(countErrors(w, SOnes, y) / S.shape[0])
+            print("Error test set: ")
+            print(countErrors(w, STestOnes, yTest) / STestOnes.shape[0])
+            print("Weights: ")
+            print(w)
+
+    if(argv[0] == "2b"):
         c = C[1]
-        args = (S, y)
+        g = gamma[1]
+        print("C value of " + str(c))
+        args = (S, y, g)
         bounds = [(0.0, c)] * S.shape[0]
         cons = ({'type':'eq','fun':lambda x: x.dot(y)})
         x0 = np.zeros(S.shape[0], dtype='float')
 
-        sol = minimize(fun=svmDualObjective, x0=x0, args=args, method='SLSQP', constraints=cons, bounds=bounds)
-    
-        print(sol)
+        sol = minimize(fun=svmDualObjectiveKernel, x0=x0, args=args, method='SLSQP', constraints=cons, bounds=bounds)
+        alphas = sol.x
 
+        allNon0Idx, btw0andC = getIdxNonZero(alphas, c)
 
+        supportVecs = S[allNon0Idx, :]
+        supportVecY = y[allNon0Idx]
+        alphaStar = alphas[allNon0Idx]
+        bVecs = S[btw0andC, :]
+        bVecY = y[btw0andC]
 
+        # getOptimalB(alphas, supportVecs, ySupport, gamma, bVecs, y)
+        bStar = getOptimalBK(alphaStar, supportVecs, supportVecY, g, bVecs, bVecY)
+
+        #countErrorsK(alphas, supportVecs, ySupport, b, gamma, S, y)
+
+        print("Error train set: ")
+        print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, S, y) / S.shape[0])
+        print("Error test set: ")
+        print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, STest, yTest) / STest.shape[0])
 
 
 
