@@ -1,0 +1,75 @@
+C value of: 0.1145475372279496 Gamma value of: 0.1
+Error train set: 
+0.15711009174311927
+Error test set: 
+0.416
+C value of: 0.1145475372279496 Gamma value of: 0.5
+Error train set: 
+0.20871559633027523
+Error test set: 
+0.302
+C value of: 0.1145475372279496 Gamma value of: 1
+Error train set: 
+0.027522935779816515
+Error test set: 
+0.102
+C value of: 0.1145475372279496 Gamma value of: 5
+Error train set: 
+0.0034403669724770644
+Error test set: 
+0.004
+C value of: 0.1145475372279496 Gamma value of: 100
+Error train set: 
+0.013761467889908258
+Error test set: 
+0.008
+C value of: 0.572737686139748 Gamma value of: 0.1
+Error train set: 
+0.0
+Error test set: 
+0.34
+C value of: 0.572737686139748 Gamma value of: 0.5
+Error train set: 
+0.0
+Error test set: 
+0.014
+C value of: 0.572737686139748 Gamma value of: 1
+Error train set: 
+0.0
+Error test set: 
+0.004
+C value of: 0.572737686139748 Gamma value of: 5
+Error train set: 
+0.0
+Error test set: 
+0.0
+C value of: 0.572737686139748 Gamma value of: 100
+Error train set: 
+0.008027522935779817
+Error test set: 
+0.006
+C value of: 0.8018327605956472 Gamma value of: 0.1
+Error train set: 
+0.0
+Error test set: 
+0.22
+C value of: 0.8018327605956472 Gamma value of: 0.5
+Error train set: 
+0.0
+Error test set: 
+0.01
+C value of: 0.8018327605956472 Gamma value of: 1
+Error train set: 
+0.0
+Error test set: 
+0.004
+C value of: 0.8018327605956472 Gamma value of: 5
+Error train set: 
+0.0
+Error test set: 
+0.0
+C value of: 0.8018327605956472 Gamma value of: 100
+Error train set: 
+0.008027522935779817
+Error test set: 
+0.006

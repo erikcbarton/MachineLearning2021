@@ -80,7 +80,7 @@ def SSGD_SVM(S, y, ephocs, learnRateFunc, C=1, doRando=False):
 
         for i in range(STemp.shape[0]):
             # Make prediction
-            prediction = w.dot(S[i]) * yTemp[i]
+            prediction = w.dot(STemp[i]) * yTemp[i]
             #print("Prediction: " + str(prediction))
 
             gama = learnRateFunc(ephocsCount) # note: must change for test
@@ -94,7 +94,7 @@ def SSGD_SVM(S, y, ephocs, learnRateFunc, C=1, doRando=False):
                 gamaW0 = W0 * gama
                 #print("GamaW0: " + str(gamaW0))
 
-                gamaCNyx = gama * C * N * yTemp[i] * S[i]
+                gamaCNyx = gama * C * N * yTemp[i] * STemp[i]
                 #print("GamaCNyx: " + str(gamaCNyx))
 
                 
@@ -344,34 +344,36 @@ def main(argv):
             print(w)
 
     if(argv[0] == "2b"):
-        c = C[1]
-        g = gamma[1]
-        print("C value of " + str(c))
-        args = (S, y, g)
-        bounds = [(0.0, c)] * S.shape[0]
-        cons = ({'type':'eq','fun':lambda x: x.dot(y)})
-        x0 = np.zeros(S.shape[0], dtype='float')
+        for c in C:
+            for g in gamma:
+                #c = C[1]
+                #g = gamma[1]
+                print("C value of: " + str(c) + " Gamma value of: " + str(g))
+                args = (S, y, g)
+                bounds = [(0.0, c)] * S.shape[0]
+                cons = ({'type':'eq','fun':lambda x: x.dot(y)})
+                x0 = np.zeros(S.shape[0], dtype='float')
 
-        sol = minimize(fun=svmDualObjectiveKernel, x0=x0, args=args, method='SLSQP', constraints=cons, bounds=bounds)
-        alphas = sol.x
+                sol = minimize(fun=svmDualObjectiveKernel, x0=x0, args=args, method='SLSQP', constraints=cons, bounds=bounds)
+                alphas = sol.x
 
-        allNon0Idx, btw0andC = getIdxNonZero(alphas, c)
+                allNon0Idx, btw0andC = getIdxNonZero(alphas, c)
 
-        supportVecs = S[allNon0Idx, :]
-        supportVecY = y[allNon0Idx]
-        alphaStar = alphas[allNon0Idx]
-        bVecs = S[btw0andC, :]
-        bVecY = y[btw0andC]
+                supportVecs = S[allNon0Idx, :]
+                supportVecY = y[allNon0Idx]
+                alphaStar = alphas[allNon0Idx]
+                bVecs = S[btw0andC, :]
+                bVecY = y[btw0andC]
 
-        # getOptimalB(alphas, supportVecs, ySupport, gamma, bVecs, y)
-        bStar = getOptimalBK(alphaStar, supportVecs, supportVecY, g, bVecs, bVecY)
+                # getOptimalB(alphas, supportVecs, ySupport, gamma, bVecs, y)
+                bStar = getOptimalBK(alphaStar, supportVecs, supportVecY, g, bVecs, bVecY)
 
-        #countErrorsK(alphas, supportVecs, ySupport, b, gamma, S, y)
+                #countErrorsK(alphas, supportVecs, ySupport, b, gamma, S, y)
 
-        print("Error train set: ")
-        print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, S, y) / S.shape[0])
-        print("Error test set: ")
-        print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, STest, yTest) / STest.shape[0])
+                print("Error train set: ")
+                print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, S, y) / S.shape[0])
+                print("Error test set: ")
+                print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, STest, yTest) / STest.shape[0])
 
 
 
