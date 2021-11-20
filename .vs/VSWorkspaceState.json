@@ -5,9 +5,9 @@
     "\\EnsembleLearning",
     "\\LinearRegression",
     "\\Perceptron",
-    "\\Perceptron\\bank-note",
-    "\\Perceptron\\bank-note\\bank-note"
+    "\\Perceptron\\bank-note\\bank-note",
+    "\\SVM"
   ],
-  "SelectedNode": "\\Perceptron",
+  "SelectedNode": "\\SVM\\SVM.py",
   "PreviewInSolutionExplorer": false
 }
