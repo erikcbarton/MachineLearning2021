@@ -109,8 +109,8 @@ def SSGD_SVM(S, y, ephocs, learnRateFunc, C=1, doRando=False):
 
             #print("New W: " + str(w))
 
-        errorsCurr = countErrors(w, S, y)
-        errors.append(errorsCurr)
+        #errorsCurr = countErrors(w, S, y)
+        #errors.append(errorsCurr)
 
     return w, ephocsCount, errors
 
@@ -184,13 +184,18 @@ def svmDualObjectiveKernel(alpha, *args):
     sumAlpha = np.sum(alpha)
     return 0.5 * sumIJ - sumAlpha
 
-
+'''
+Gaussian kernel for a batch.
+'''
 def K(X, gamma):
     p = pdist(X, 'euclidean')
     pairwise_dists = squareform(p)
     K = np.exp(-1 * np.square(pairwise_dists) / gamma)
     return K
 
+'''
+Gaussian kernel for a single example.
+'''
 def KSingle(xi, xj, gamma):
     normedSquared = np.linalg.norm(xi - xj) ** 2
     return np.exp(-normedSquared / gamma)
@@ -248,13 +253,6 @@ def getOptimalBK(alphas, supportVecs, ySupport, gamma, bVecs, y):
     return sum / bVecs.shape[0]
 
 def countErrorsK(alphas, supportVecs, ySupport, b, gamma, S, y):
-    # print("Alphas: " + str(alphas.shape))
-    # print("supportVecs: " + str(supportVecs.shape))
-    # print("ySupport: " + str(ySupport.shape))
-    # print("b: " + str(b))
-    # print("gamma: " + str(gamma))
-    # print("S: " + str(S.shape))
-    # print("y: " + str(y.shape))
     errors = 0
     for i in range(S.shape[0]):
         prediction = 0.0
@@ -291,7 +289,8 @@ def main(argv):
     C = [(100.0/873.0), (500.0/873.0), (700.0/873.0)]
     gamma = [0.1, 0.5, 1, 5, 100]
 
-    if(argv[0] == "1a"):
+    if(argv[0] == "2a"):
+        print("2.2.a - Linear Primal")
         for c in C:
             print("C value of " + str(c))
             w, numEphocs, _ = SSGD_SVM(SOnes, y, 100, scheduleA, C=c, doRando=True)
@@ -302,7 +301,8 @@ def main(argv):
             print("Weights: ")
             print(w)
 
-    if(argv[0] == "1b"):
+    if(argv[0] == "2b"):
+        print("2.2.b - Linear Primal")
         for c in C:
             print("C value of " + str(c))
             w, numEphocs, _ = SSGD_SVM(SOnes, y, 100, scheduleB, C=c, doRando=True)
@@ -313,7 +313,9 @@ def main(argv):
             print("Weights: ")
             print(w)
 
-    if(argv[0] == "2a"):
+    if(argv[0] == "3a"):
+        print("2.3.a - Linear Dual")
+        print("WARNING: Slow!")
         for c in C:
             print("C value of " + str(c))
             args = (S, y)
@@ -343,7 +345,9 @@ def main(argv):
             print("Weights: ")
             print(w)
 
-    if(argv[0] == "2b"):
+    if(argv[0] == "3b"):
+        print("2.3.b - Gaussain Dual")
+        print("WARNING: Very Slow!")
         for c in C:
             for g in gamma:
                 #c = C[1]
@@ -365,17 +369,14 @@ def main(argv):
                 bVecs = S[btw0andC, :]
                 bVecY = y[btw0andC]
 
-                # getOptimalB(alphas, supportVecs, ySupport, gamma, bVecs, y)
                 bStar = getOptimalBK(alphaStar, supportVecs, supportVecY, g, bVecs, bVecY)
-
-                #countErrorsK(alphas, supportVecs, ySupport, b, gamma, S, y)
 
                 print("Error train set: ")
                 print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, S, y) / S.shape[0])
                 print("Error test set: ")
                 print(countErrorsK(alphaStar, supportVecs, supportVecY, bStar, g, STest, yTest) / STest.shape[0])
 
-
+    print("")
 
 if __name__ == '__main__':
     main(sys.argv[1:])

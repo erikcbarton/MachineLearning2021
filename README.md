@@ -10,3 +10,5 @@ NOTE: The output of my projets are always print statements. I prefer to make the
 
 NOTE: As per request, I am adding additional runHW#.sh files to this parent folder for ease of grading. I will continue to also place 
 run.sh files in the actual folders as well.
+
+NOTE: Due to the slowness of HW4 2.3.b runtime, the output has been saved in the SVM folder.
