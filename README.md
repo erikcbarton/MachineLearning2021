@@ -12,3 +12,5 @@ NOTE: As per request, I am adding additional runHW#.sh files to this parent fold
 run.sh files in the actual folders as well.
 
 NOTE: Due to the slowness of HW4 2.3.b runtime, the output has been saved in the SVM folder.
+
+NOTE: The tensorflow neural network implementation is also available in a .ipynb file for use in google colab.
