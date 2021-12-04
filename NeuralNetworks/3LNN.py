@@ -270,7 +270,7 @@ class ThreeLayerNet(object):
 
 def schedule(t):
     gama0 = 0.001 #0.0000030517578125
-    a = 2.0
+    a = 4.0
     return (gama0) / (1 + (gama0 / a) * t)
 
 
@@ -344,7 +344,7 @@ def main(argv):
         for w in WVals:
             width = w-1
             net = ThreeLayerNet(4, width, std=0)
-            net.train(S, y, STest, yTest, 200, schedule, verbose=True)
+            net.train(S, y, STest, yTest, 200, schedule, verbose=False)
 
             print("Width " + str(w))
             print("Training Error: " + str(countErrorsNN(net, S, y)/S.shape[0]))
