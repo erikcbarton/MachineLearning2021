@@ -12,14 +12,26 @@ Erik Barton
 
 import tensorflow as tf
 import numpy as np
+import os
 
-print("Performs tensorflow learning. Warning: Needs a gpu and tensorflow.")
+print("")
+print("Performs tensorflow learning.")
+print("Warning: Needs a gpu and tensorflow.")
+print("")
+print("")
+print("Please note: you may also want to use the .ipynb file found in this folder to run in google colab.")
+print("Warning: performance may vary between runs.")
+print("")
+print("")
 
 device_name = tf.test.gpu_device_name()
 if device_name != '/device:GPU:0':
   raise SystemError('GPU device not found')
 print('Found GPU at: {}'.format(device_name))
+print("")
 
+# Make the models (note the width is reduced by 1 to account for the bias parameter)
+# NOTE: The glorot_uniform is equivelent to the Xavier initalization as per the tensorflow documentation
 # RL 3 ############################################
 RL_3_5 = tf.keras.models.Sequential([
   tf.keras.layers.Dense(4, activation='relu', kernel_initializer='glorot_uniform'),
@@ -185,7 +197,7 @@ TH_3_100 = tf.keras.models.Sequential([
   tf.keras.layers.Dense(1),
 ])
 
-# RL 5 ############################################
+# TH 5 ############################################
 TH_5_5 = tf.keras.models.Sequential([
   tf.keras.layers.Dense(4, activation='tanh', kernel_initializer=tf.keras.initializers.HeNormal()),
   tf.keras.layers.Dense(4, activation='tanh', kernel_initializer=tf.keras.initializers.HeNormal()),
@@ -226,7 +238,7 @@ TH_5_100 = tf.keras.models.Sequential([
   tf.keras.layers.Dense(1),
 ])
 
-# RL 9 ############################################
+# TH 9 ############################################
 
 TH_9_5 = tf.keras.models.Sequential([
   tf.keras.layers.Dense(4, activation='tanh', kernel_initializer=tf.keras.initializers.HeNormal()),
@@ -288,20 +300,21 @@ TH_9_100 = tf.keras.models.Sequential([
   tf.keras.layers.Dense(1),
 ])
 
+
 '''
 Loads test data from the specified file - expects ',' delim. Adds in a column of 1's as the frist column of S.
 '''
 def loadDataSy(fileData):
-    tempSandY = np.genfromtxt(fileData, dtype=float, delimiter=',')
-    S = tempSandY[:,0:-1]
-    y = tempSandY[:,-1]
+  tempSandY = np.genfromtxt(fileData, dtype=float, delimiter=',')
+  S = tempSandY[:,0:-1]
+  y = tempSandY[:,-1]
+  return S, y
 
-
-
+print("")
 print("Loading Data")
+print("")
 script_dir = os.path.dirname(__file__)
 start = str(script_dir)
-    
 S, y = loadDataSy(start + "/bank-note/bank-note/train.csv")
 STest, yTest = loadDataSy(start + "/bank-note/bank-note/test.csv")
 
@@ -492,6 +505,7 @@ with tf.device('/device:GPU:0'):
   history = TH_9_100.fit(S, y, epochs=250, validation_data=(STest, yTest), verbose=0)
 
 print("Completed tanh training.")
+print("")
 
 errorReports("ReLU D3 W5", RL_3_5, S, y, STest, yTest)
 errorReports("ReLU D3 W10", RL_3_10, S, y, STest, yTest)
